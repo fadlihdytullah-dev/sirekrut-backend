@@ -1,9 +1,10 @@
 const { db } = require("./../utils/admin");
+const { actionType } = require("./../utils/constants");
 const {
   buildErrorMessage,
   buildResponseData,
-  actionType
-} = require("./../utils/constants");
+  getErrorMessageFromValidator
+} = require("./../utils/helper");
 
 const STUDY_PROGRAMS_REF = db.collection("study_programs");
 

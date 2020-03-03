@@ -1,8 +1,18 @@
+const cors = require("cors");
 require("dotenv").config();
 const functions = require("firebase-functions");
-const app = require("express")();
+const express = require("express");
+const app = express();
 
-const { getPositions } = require("./routes/positions");
+const {
+  getPositions,
+  getPosition,
+  addAndUpdatePositionValidation,
+  addPosition,
+  deletePosition,
+  updatePosition
+} = require("./routes/positions");
+
 const {
   getStudyPrograms,
   getStudyProgram,
@@ -26,7 +36,16 @@ const firebaseConfig = {
 const firebase = require("firebase");
 firebase.initializeApp(firebaseConfig);
 
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ✅ Positions Route
 app.get("/positions", getPositions);
+app.get("/positions/:id", getPosition);
+app.post("/positions", addAndUpdatePositionValidation, addPosition);
+app.delete("/positions/:id", deletePosition);
+app.put("/positions/:id", addAndUpdatePositionValidation, updatePosition);
 
 // ✅ Study Programs Route
 app.get("/study_programs", getStudyPrograms);
