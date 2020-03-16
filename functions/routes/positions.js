@@ -8,7 +8,7 @@ const {
 } = require("./../utils/helper");
 
 const POSITIONS_REF = db.collection("positions");
-const STUDY_PROGRAMS_REF = db.collection("study_programs");
+const STUDY_PROGRAMS_REF = db.collection("studyPrograms");
 const CONTEXT = "position(s)";
 
 let responseData;
@@ -17,19 +17,24 @@ const addAndUpdatePositionValidation = [
   check("name")
     .isString()
     .notEmpty(),
-  check("minimum_graduate")
+  check("minimumGraduate")
     .isString()
     .isIn(["DIPLOMA", "SARJANA", "MAGISTER", "DOKTOR"])
     .notEmpty(),
-  check("study_programs").notEmpty(),
-  check("minimum_gpa")
+  check("studyPrograms").notEmpty(),
+  check("minimumGPA")
     .isNumeric()
     .notEmpty(),
   check("details").optional({ nullable: true })
 ];
 
 const resolvePositionWithStudyPrograms = async position => {
-  const studyPrograms = position.study_programs;
+  const { studyPrograms } = position;
+
+  if (!studyPrograms) {
+    return;
+  }
+
   if (studyPrograms === "ALL") {
     return position;
   } else {
@@ -53,12 +58,12 @@ const getPositions = async (req, res) => {
       positionList.push({ id: doc.id, ...doc.data() });
     });
 
-    const updatedPositionList = positionList.map(
+    const positionListWithStudyPrograms = positionList.map(
       resolvePositionWithStudyPrograms
     );
 
-    const data = await Promise.all(updatedPositionList);
-    responseData = buildResponseData(true, "", data);
+    const data = await Promise.all(positionListWithStudyPrograms);
+    responseData = buildResponseData(true, null, data);
     res.json(responseData);
   } catch (error) {
     responseData = buildResponseData(
@@ -73,7 +78,7 @@ const getPositions = async (req, res) => {
 
 const getPosition = async (req, res) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
     const doc = await POSITIONS_REF.doc(id).get();
 
     if (!doc.exists) {
@@ -88,7 +93,7 @@ const getPosition = async (req, res) => {
 
     const data = { id: doc.id, ...doc.data() };
     const updatedData = await resolvePositionWithStudyPrograms(data);
-    responseData = buildResponseData(true, "", updatedData);
+    responseData = buildResponseData(true, null, updatedData);
 
     res.json(responseData);
   } catch (error) {
@@ -115,9 +120,9 @@ const addPosition = async (req, res) => {
 
     const newItem = ({
       name,
-      minimum_graduate,
-      study_programs,
-      minimum_gpa,
+      minimumGraduate,
+      studyPrograms,
+      minimumGPA,
       details = ""
     } = req.body);
     const docRef = await POSITIONS_REF.add(newItem);
@@ -126,7 +131,7 @@ const addPosition = async (req, res) => {
       ...newItem
     };
 
-    responseData = buildResponseData(true, "", data);
+    responseData = buildResponseData(true, null, data);
 
     res.json(responseData);
   } catch (error) {
@@ -142,20 +147,23 @@ const addPosition = async (req, res) => {
 
 const deletePosition = async (req, res) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
+
     const doc = await POSITIONS_REF.doc(id).get();
 
     if (!doc.exists) {
       responseData = buildResponseData(
         false,
-        "Position with the given ID was not found."
+        "Position with the given ID was not found.",
+        null
       );
 
       return res.status(404).json(responseData);
     }
 
     await POSITIONS_REF.doc(id).delete();
-    responseData = buildResponseData(true, "", null);
+    responseData = buildResponseData(true, null, null);
+
     res.json(responseData);
   } catch (error) {
     responseData = buildResponseData(
@@ -169,19 +177,20 @@ const deletePosition = async (req, res) => {
 };
 
 const updatePosition = async (req, res) => {
-  const id = req.params.id;
-  const doc = await POSITIONS_REF.doc(id).get();
-
-  if (!doc.exists) {
-    responseData = buildResponseData(
-      false,
-      "Position with the given ID was not found."
-    );
-
-    return res.status(404).json(responseData);
-  }
-
   try {
+    const { id } = req.params;
+    const doc = await POSITIONS_REF.doc(id).get();
+
+    if (!doc.exists) {
+      responseData = buildResponseData(
+        false,
+        "Position with the given ID was not found.",
+        null
+      );
+
+      return res.status(404).json(responseData);
+    }
+
     const errors = validationResult(req);
     const hasError = getErrorListFromValidator(errors);
 
@@ -193,9 +202,9 @@ const updatePosition = async (req, res) => {
 
     const updatedItem = ({
       name,
-      minimum_graduate,
-      study_programs,
-      minimum_gpa,
+      minimumGraduate,
+      studyPrograms,
+      minimumGPA,
       details = ""
     } = req.body);
     const docRef = await POSITIONS_REF.doc(id).set(updatedItem);
@@ -204,7 +213,7 @@ const updatePosition = async (req, res) => {
       ...updatedItem
     };
 
-    responseData = buildResponseData(true, "", data);
+    responseData = buildResponseData(true, null, data);
 
     res.json(responseData);
   } catch (error) {
