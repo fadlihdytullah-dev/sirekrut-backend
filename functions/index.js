@@ -16,6 +16,7 @@ const {
 const {
   getStudyPrograms,
   getStudyProgram,
+  addAndUpdateStudyProgramValidation,
   addStudyProgram,
   deleteStudyProgram,
   updateStudyProgram
@@ -40,19 +41,27 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Positions Route
+// 🛣 Positions Route
 app.get("/positions", getPositions);
 app.get("/positions/:id", getPosition);
 app.post("/positions", addAndUpdatePositionValidation, addPosition);
 app.delete("/positions/:id", deletePosition);
 app.put("/positions/:id", addAndUpdatePositionValidation, updatePosition);
 
-// ✅ Study Programs Route
+// 🛣 Study Programs Route
 app.get("/study_programs", getStudyPrograms);
 app.get("/study_programs/:id", getStudyProgram);
-app.post("/study_programs", addStudyProgram);
+app.post(
+  "/study_programs",
+  addAndUpdateStudyProgramValidation,
+  addStudyProgram
+);
 app.delete("/study_programs/:id", deleteStudyProgram);
-app.put("/study_programs/:id", updateStudyProgram);
+app.put(
+  "/study_programs/:id",
+  addAndUpdateStudyProgramValidation,
+  updateStudyProgram
+);
 
 // exports.helloWorld = functions.https.onRequest((req, res) => res.send('Hello world!'));
 exports.api = functions.https.onRequest(app);
