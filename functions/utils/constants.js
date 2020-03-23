@@ -2,7 +2,8 @@ const actionType = {
   RETRIEVING: "retrieving",
   ADDING: "adding",
   UPDATING: "updating",
-  DELETING: "deleting"
+  DELETING: "deleting",
+  VERIFYING: "verifying"
 };
 
 module.exports = { actionType };

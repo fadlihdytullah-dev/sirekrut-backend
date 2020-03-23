@@ -118,14 +118,18 @@ const addPosition = async (req, res) => {
       return res.status(422).json(responseData);
     }
 
-    const newItem = ({
+    let newItem = ({
       name,
       minimumGraduate,
       studyPrograms,
       minimumGPA,
       details = ""
     } = req.body);
+
+    newItem = { ...newItem, createdBy: req.user.nip };
+
     const docRef = await POSITIONS_REF.add(newItem);
+
     const data = {
       id: docRef.id,
       ...newItem
