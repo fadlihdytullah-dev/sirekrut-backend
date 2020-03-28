@@ -84,11 +84,17 @@ const addStudyProgram = async (req, res) => {
 
     const { name } = req.body;
 
-    const docRef = await STUDY_PROGRAMS_REF.add({ name });
+    const newItem = {
+      name,
+      createdBy: req.user.nip,
+      createdAt: new Date().toISOString()
+    };
+
+    const docRef = await STUDY_PROGRAMS_REF.add(newItem);
 
     const data = {
       id: docRef.id,
-      name
+      ...updatedItem
     };
 
     responseData = buildResponseData(true, null, data);
@@ -130,15 +136,19 @@ const updateStudyProgram = async (req, res) => {
     }
 
     const { name } = req.body;
-    const updatedItem = { name };
+    const updatedItem = {
+      name,
+      updatedBy: req.user.nip,
+      updatedAt: new Date().toISOString()
+    };
 
     console.log("ℹ️ name:=", name);
 
-    const docRef = await STUDY_PROGRAMS_REF.doc(id).set(updatedItem);
+    const docRef = await STUDY_PROGRAMS_REF.doc(id).update(updatedItem);
 
     const data = {
       id: docRef.id,
-      name
+      ...updatedItem
     };
     responseData = buildResponseData(true, null, data);
 
