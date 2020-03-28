@@ -39,6 +39,15 @@ const {
   deleteTimeline
 } = require("./routes/timelines");
 
+const {
+  getForm,
+  getForms,
+  addFormsValidation,
+  addForm,
+  updateForm,
+  deleteForm
+} = require("./routes/forms");
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -69,12 +78,19 @@ app.put(
   updateStudyProgram
 );
 
-// 🛣 Study Programs Route
+// 🛣 Timelines Route
 app.get("/timelines", getTimelines);
 app.get("/timelines/:id", getTimeline);
 app.post("/timelines", [FBAuthMiddleware, addTimelineValidation], addTimeline);
 app.put("/timelines/:id", [FBAuthMiddleware], updateTimeline);
 app.delete("/timelines/:id", [FBAuthMiddleware], deleteTimeline);
+
+// 🛣 Forms Route
+app.get("/forms", getForms);
+app.get("/forms/:id", getForm);
+app.post("/forms", [FBAuthMiddleware, addFormsValidation], addForm);
+app.put("/forms/:id", [FBAuthMiddleware], updateForm);
+app.delete("/forms/:id", [FBAuthMiddleware], deleteForm);
 
 // exports.helloWorld = functions.https.onRequest((req, res) => res.send('Hello world!'));
 exports.api = functions.https.onRequest(app);

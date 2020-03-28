@@ -7,40 +7,25 @@ const {
   getErrorListFromValidator
 } = require("../utils/helper");
 
-const TIMELINE_REF = db.collection("timelines");
-const CONTEXT = "recruitment timeline(s)";
+const FORMS_REF = db.collection("forms");
+const CONTEXT = "form(s)";
 
 let responseData;
 
-const addTimelineValidation = [
-  check("title")
+const addFormsValidation = [
+  check("name")
     .isString()
-    .notEmpty(),
-  check("type")
-    .isIn(["STAFF", "DOSEN", "PROFESSIONAL"])
-    .notEmpty(),
-  check("startDate")
-    .isString()
-    .notEmpty(),
-  check("endDate")
-    .isString()
-    .notEmpty(),
-  check("forms")
-    .isArray()
-    .notEmpty(),
-  check("positions")
-    .isArray()
     .notEmpty()
 ];
 
-const getTimelines = async (req, res) => {
+const getForms = async (req, res) => {
   try {
-    const timelines = [];
+    const forms = [];
 
-    const querySnapshot = await TIMELINE_REF.get();
-    querySnapshot.forEach(doc => timelines.push({ id: doc.id, ...doc.data() }));
+    const querySnapshot = await FORMS_REF.get();
+    querySnapshot.forEach(doc => forms.push({ id: doc.id, ...doc.data() }));
 
-    responseData = buildResponseData(true, null, timelines);
+    responseData = buildResponseData(true, null, forms);
 
     res.json(responseData);
   } catch (error) {
@@ -54,15 +39,15 @@ const getTimelines = async (req, res) => {
   }
 };
 
-const getTimeline = async (req, res) => {
+const getForm = async (req, res) => {
   try {
     const { id } = req.params;
-    const doc = await TIMELINE_REF.doc(id).get();
+    const doc = await FORMS_REF.doc(id).get();
 
     if (!doc.exists) {
       responseData = buildResponseData(
         false,
-        "Timeline with the given ID was not found.",
+        "Form with the given ID was not found.",
         null
       );
 
@@ -84,7 +69,7 @@ const getTimeline = async (req, res) => {
   }
 };
 
-const addTimeline = async (req, res) => {
+const addForm = async (req, res) => {
   try {
     const errors = validationResult(req);
     const hasError = getErrorListFromValidator(errors);
@@ -95,14 +80,7 @@ const addTimeline = async (req, res) => {
       return res.status(422).json(responseData);
     }
 
-    let newItem = ({
-      title,
-      type,
-      startDate,
-      endDate,
-      forms,
-      positions
-    } = req.body);
+    let newItem = ({ name } = req.body);
 
     newItem = {
       ...newItem,
@@ -110,7 +88,7 @@ const addTimeline = async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    const docRef = await TIMELINE_REF.add(newItem);
+    const docRef = await FORMS_REF.add(newItem);
 
     const data = {
       id: docRef.id,
@@ -123,7 +101,7 @@ const addTimeline = async (req, res) => {
   } catch (error) {
     responseData = buildResponseData(
       false,
-      buildErrorMessage(actionType.ADDING, CONTEXT),
+      buildErrorMessage(actionType.ADDING, CONTEXT) + error.message,
       null
     );
 
@@ -131,15 +109,15 @@ const addTimeline = async (req, res) => {
   }
 };
 
-const updateTimeline = async (req, res) => {
+const updateForm = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const doc = await TIMELINE_REF.doc(id).get();
+    const doc = await FORMS_REF.doc(id).get();
     if (!doc.exists) {
       responseData = buildResponseData(
         false,
-        "Timeline with the given ID was not found.",
+        "Form with the given ID was not found.",
         null
       );
 
@@ -148,20 +126,13 @@ const updateTimeline = async (req, res) => {
 
     const prevData = doc.data();
 
-    const { title, type, startDate, endDate, forms, positions } = req.body;
+    const { name } = req.body;
 
     const updatedItem = {
-      title: title || prevData.title,
-      type: type || prevData.type,
-      startDate: startDate || prevData.startDate,
-      endDate: endDate || prevData.endDate,
-      forms: forms || prevData.forms,
-      positions: positions || prevData.positions,
-      updatedBy: req.user.nip,
-      updatedAt: new Date().toISOString()
+      name: name || prevData.name
     };
 
-    const docRef = await TIMELINE_REF.doc(id).update(updatedItem);
+    const docRef = await FORMS_REF.doc(id).update(updatedItem);
 
     const data = {
       id: docRef.id,
@@ -181,22 +152,22 @@ const updateTimeline = async (req, res) => {
   }
 };
 
-const deleteTimeline = async (req, res) => {
+const deleteForm = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const doc = await TIMELINE_REF.doc(id).get();
+    const doc = await FORMS_REF.doc(id).get();
     if (!doc.exists) {
       responseData = buildResponseData(
         false,
-        "Timeline with the given ID was not found.",
+        "Form with the given ID was not found.",
         null
       );
 
       return res.status(404).json(responseData);
     }
 
-    await TIMELINE_REF.doc(id).delete();
+    await FORMS_REF.doc(id).delete();
     responseData = buildResponseData(true, null, null);
 
     res.json(responseData);
@@ -212,10 +183,10 @@ const deleteTimeline = async (req, res) => {
 };
 
 module.exports = {
-  getTimelines,
-  getTimeline,
-  addTimelineValidation,
-  addTimeline,
-  updateTimeline,
-  deleteTimeline
+  getForms,
+  getForm,
+  addFormsValidation,
+  addForm,
+  updateForm,
+  deleteForm
 };
