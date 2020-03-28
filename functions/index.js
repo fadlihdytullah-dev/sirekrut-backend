@@ -5,9 +5,17 @@ const express = require("express");
 const app = express();
 
 const {
+  addAdmin,
+  addAdminValidation,
+  loginAdmin,
+  loginAdminValidation,
+  FBAuthMiddleware
+} = require("./routes/auth");
+
+const {
   getPositions,
   getPosition,
-  addAndUpdatePositionValidation,
+  addPositionValidation,
   addPosition,
   deletePosition,
   updatePosition
@@ -22,32 +30,20 @@ const {
   updateStudyProgram
 } = require("./routes/study-programs");
 
-const {
-  addAdmin,
-  addAdminValidation,
-  loginAdmin,
-  loginAdminValidation,
-  FBAuthMiddleware
-} = require("./routes/auth");
-
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// 🛣 Auth Route
+app.post("/register", addAdminValidation, addAdmin);
+app.post("/login", loginAdminValidation, loginAdmin);
+
 // 🛣 Positions Route
 app.get("/positions", getPositions);
 app.get("/positions/:id", getPosition);
-app.post(
-  "/positions",
-  [addAndUpdatePositionValidation, FBAuthMiddleware],
-  addPosition
-);
+app.post("/positions", [addPositionValidation, FBAuthMiddleware], addPosition);
 app.delete("/positions/:id", [FBAuthMiddleware], deletePosition);
-app.put(
-  "/positions/:id",
-  [addAndUpdatePositionValidation, FBAuthMiddleware],
-  updatePosition
-);
+app.put("/positions/:id", [FBAuthMiddleware], updatePosition);
 
 // 🛣 Study Programs Route
 app.get("/study_programs", getStudyPrograms);
@@ -63,10 +59,6 @@ app.put(
   [addAndUpdateStudyProgramValidation, FBAuthMiddleware],
   updateStudyProgram
 );
-
-// 🛣 Auth Route
-app.post("/register", addAdminValidation, addAdmin);
-app.post("/login", loginAdminValidation, loginAdmin);
 
 // exports.helloWorld = functions.https.onRequest((req, res) => res.send('Hello world!'));
 exports.api = functions.https.onRequest(app);

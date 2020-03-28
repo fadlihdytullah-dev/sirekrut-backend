@@ -13,7 +13,7 @@ const CONTEXT = "position(s)";
 
 let responseData;
 
-const addAndUpdatePositionValidation = [
+const addPositionValidation = [
   check("name")
     .isString()
     .notEmpty(),
@@ -45,7 +45,7 @@ const resolvePositionWithStudyPrograms = async position => {
 
     const result = await Promise.all(data);
 
-    return { ...position, study_programs: result };
+    return { ...position, studyPrograms: result };
   }
 };
 
@@ -126,7 +126,11 @@ const addPosition = async (req, res) => {
       details = ""
     } = req.body);
 
-    newItem = { ...newItem, createdBy: req.user.nip };
+    newItem = {
+      ...newItem,
+      createdBy: req.user.nip,
+      createdAt: new Date().toISOString()
+    };
 
     const docRef = await POSITIONS_REF.add(newItem);
 
@@ -204,14 +208,27 @@ const updatePosition = async (req, res) => {
       return res.status(422).json(responseData);
     }
 
-    const updatedItem = ({
+    const prevData = doc.data();
+
+    const {
       name,
       minimumGraduate,
       studyPrograms,
       minimumGPA,
-      details = ""
-    } = req.body);
-    const docRef = await POSITIONS_REF.doc(id).set(updatedItem);
+      details
+    } = req.body;
+
+    const updatedItem = {
+      name: name || prevData.name,
+      minimumGraduate: minimumGraduate || prevData.minimumGraduate,
+      studyPrograms: studyPrograms || prevData.studyPrograms,
+      minimumGPA: minimumGPA || prevData.minimumGPA,
+      details: details || prevData.details,
+      updatedBy: req.user.nip,
+      updatedAt: new Date().toISOString()
+    };
+
+    const docRef = await POSITIONS_REF.doc(id).update(updatedItem);
     const data = {
       id,
       ...updatedItem
@@ -232,7 +249,7 @@ const updatePosition = async (req, res) => {
 };
 
 module.exports = {
-  addAndUpdatePositionValidation,
+  addPositionValidation,
   getPositions,
   getPosition,
   addPosition,
