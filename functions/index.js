@@ -30,6 +30,15 @@ const {
   updateStudyProgram
 } = require("./routes/study-programs");
 
+const {
+  getTimelines,
+  getTimeline,
+  addTimelineValidation,
+  addTimeline,
+  updateTimeline,
+  deleteTimeline
+} = require("./routes/timelines");
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -59,6 +68,13 @@ app.put(
   [addAndUpdateStudyProgramValidation, FBAuthMiddleware],
   updateStudyProgram
 );
+
+// 🛣 Study Programs Route
+app.get("/timelines", getTimelines);
+app.get("/timelines/:id", getTimeline);
+app.post("/timelines", [FBAuthMiddleware, addTimelineValidation], addTimeline);
+app.put("/timelines/:id", [FBAuthMiddleware], updateTimeline);
+app.delete("/timelines/:id", [FBAuthMiddleware], deleteTimeline);
 
 // exports.helloWorld = functions.https.onRequest((req, res) => res.send('Hello world!'));
 exports.api = functions.https.onRequest(app);
