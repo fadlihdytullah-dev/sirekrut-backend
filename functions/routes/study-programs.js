@@ -14,6 +14,7 @@ let responseData;
 
 const addAndUpdateStudyProgramValidation = [
   check('name').isString().notEmpty(),
+  check('degree').isString().notEmpty(),
 ];
 
 const getStudyPrograms = async (req, res) => {
@@ -83,10 +84,11 @@ const addStudyProgram = async (req, res) => {
       return res.status(422).json(responseData);
     }
 
-    const {name} = req.body;
+    const {name, degree} = req.body;
 
     const newItem = {
       name,
+      degree,
       createdBy: req.user.nip,
       createdAt: new Date().toISOString(),
     };
@@ -95,7 +97,7 @@ const addStudyProgram = async (req, res) => {
 
     const data = {
       id: docRef.id,
-      ...updatedItem,
+      ...newItem,
     };
 
     responseData = buildResponseData(true, null, data);
@@ -108,7 +110,7 @@ const addStudyProgram = async (req, res) => {
       null
     );
 
-    res.json(responseData);
+    res.status(500).json(responseData);
   }
 };
 
@@ -136,14 +138,13 @@ const updateStudyProgram = async (req, res) => {
       return res.status(404).json(responseData);
     }
 
-    const {name} = req.body;
+    const {name, degree} = req.body;
     const updatedItem = {
       name,
+      degree,
       updatedBy: req.user.nip,
       updatedAt: new Date().toISOString(),
     };
-
-    console.log('ℹ️ name:=', name);
 
     const docRef = await STUDY_PROGRAMS_REF.doc(id).update(updatedItem);
 
