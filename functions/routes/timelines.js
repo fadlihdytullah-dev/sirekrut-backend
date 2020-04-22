@@ -1,44 +1,32 @@
-const { db } = require("../utils/admin");
-const { check, validationResult } = require("express-validator");
-const { actionType } = require("../utils/constants");
+const {db} = require('../utils/admin');
+const {check, validationResult} = require('express-validator');
+const {actionType} = require('../utils/constants');
 const {
   buildErrorMessage,
   buildResponseData,
-  getErrorListFromValidator
-} = require("../utils/helper");
+  getErrorListFromValidator,
+} = require('../utils/helper');
 
-const TIMELINE_REF = db.collection("timelines");
-const CONTEXT = "recruitment timeline(s)";
+const TIMELINE_REF = db.collection('timelines');
+const CONTEXT = 'recruitment timeline(s)';
 
 let responseData;
 
 const addTimelineValidation = [
-  check("title")
-    .isString()
-    .notEmpty(),
-  check("type")
-    .isIn(["STAFF", "DOSEN", "PROFESSIONAL"])
-    .notEmpty(),
-  check("startDate")
-    .isString()
-    .notEmpty(),
-  check("endDate")
-    .isString()
-    .notEmpty(),
-  check("forms")
-    .isArray()
-    .notEmpty(),
-  check("positions")
-    .isArray()
-    .notEmpty()
+  check('title').isString().notEmpty(),
+  check('type').isIn(['STAFF', 'DOSEN', 'PROFESSIONAL']).notEmpty(),
+  check('startDate').isString().notEmpty(),
+  check('endDate').isString().notEmpty(),
+  check('forms').isArray().notEmpty(),
+  check('positions').isArray().notEmpty(),
 ];
 
 const getTimelines = async (req, res) => {
   try {
     const timelines = [];
 
-    const querySnapshot = await TIMELINE_REF.get();
-    querySnapshot.forEach(doc => timelines.push({ id: doc.id, ...doc.data() }));
+    const querySnapshot = await TIMELINE_REF.orderBy('createdAt', 'desc').get();
+    querySnapshot.forEach((doc) => timelines.push({id: doc.id, ...doc.data()}));
 
     responseData = buildResponseData(true, null, timelines);
 
@@ -56,20 +44,20 @@ const getTimelines = async (req, res) => {
 
 const getTimeline = async (req, res) => {
   try {
-    const { id } = req.params;
+    const {id} = req.params;
     const doc = await TIMELINE_REF.doc(id).get();
 
     if (!doc.exists) {
       responseData = buildResponseData(
         false,
-        "Timeline with the given ID was not found.",
+        'Timeline with the given ID was not found.',
         null
       );
 
       return res.status(404).json(responseData);
     }
 
-    const data = { id: doc.id, ...doc.data() };
+    const data = {id: doc.id, ...doc.data()};
     responseData = buildResponseData(true, null, data);
 
     res.json(responseData);
@@ -101,20 +89,20 @@ const addTimeline = async (req, res) => {
       startDate,
       endDate,
       forms,
-      positions
+      positions,
     } = req.body);
 
     newItem = {
       ...newItem,
       createdBy: req.user.nip,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     const docRef = await TIMELINE_REF.add(newItem);
 
     const data = {
       id: docRef.id,
-      ...newItem
+      ...newItem,
     };
 
     responseData = buildResponseData(true, null, data);
@@ -133,13 +121,13 @@ const addTimeline = async (req, res) => {
 
 const updateTimeline = async (req, res) => {
   try {
-    const { id } = req.params;
+    const {id} = req.params;
 
     const doc = await TIMELINE_REF.doc(id).get();
     if (!doc.exists) {
       responseData = buildResponseData(
         false,
-        "Timeline with the given ID was not found.",
+        'Timeline with the given ID was not found.',
         null
       );
 
@@ -148,7 +136,7 @@ const updateTimeline = async (req, res) => {
 
     const prevData = doc.data();
 
-    const { title, type, startDate, endDate, forms, positions } = req.body;
+    const {title, type, startDate, endDate, forms, positions} = req.body;
 
     const updatedItem = {
       title: title || prevData.title,
@@ -158,14 +146,14 @@ const updateTimeline = async (req, res) => {
       forms: forms || prevData.forms,
       positions: positions || prevData.positions,
       updatedBy: req.user.nip,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     const docRef = await TIMELINE_REF.doc(id).update(updatedItem);
 
     const data = {
       id: docRef.id,
-      ...updatedItem
+      ...updatedItem,
     };
     responseData = buildResponseData(true, null, data);
 
@@ -183,13 +171,13 @@ const updateTimeline = async (req, res) => {
 
 const deleteTimeline = async (req, res) => {
   try {
-    const { id } = req.params;
+    const {id} = req.params;
 
     const doc = await TIMELINE_REF.doc(id).get();
     if (!doc.exists) {
       responseData = buildResponseData(
         false,
-        "Timeline with the given ID was not found.",
+        'Timeline with the given ID was not found.',
         null
       );
 
@@ -217,5 +205,5 @@ module.exports = {
   addTimelineValidation,
   addTimeline,
   updateTimeline,
-  deleteTimeline
+  deleteTimeline,
 };

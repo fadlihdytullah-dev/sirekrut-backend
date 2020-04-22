@@ -1,29 +1,25 @@
-const { db } = require("../utils/admin");
-const { check, validationResult } = require("express-validator");
-const { actionType } = require("../utils/constants");
+const {db} = require('../utils/admin');
+const {check, validationResult} = require('express-validator');
+const {actionType} = require('../utils/constants');
 const {
   buildErrorMessage,
   buildResponseData,
-  getErrorListFromValidator
-} = require("../utils/helper");
+  getErrorListFromValidator,
+} = require('../utils/helper');
 
-const FORMS_REF = db.collection("forms");
-const CONTEXT = "form(s)";
+const FORMS_REF = db.collection('forms');
+const CONTEXT = 'form(s)';
 
 let responseData;
 
-const addFormsValidation = [
-  check("name")
-    .isString()
-    .notEmpty()
-];
+const addFormsValidation = [check('name').isString().notEmpty()];
 
 const getForms = async (req, res) => {
   try {
     const forms = [];
 
-    const querySnapshot = await FORMS_REF.get();
-    querySnapshot.forEach(doc => forms.push({ id: doc.id, ...doc.data() }));
+    const querySnapshot = await FORMS_REF.orderBy('createdAt', 'desc').get();
+    querySnapshot.forEach((doc) => forms.push({id: doc.id, ...doc.data()}));
 
     responseData = buildResponseData(true, null, forms);
 
@@ -41,20 +37,20 @@ const getForms = async (req, res) => {
 
 const getForm = async (req, res) => {
   try {
-    const { id } = req.params;
+    const {id} = req.params;
     const doc = await FORMS_REF.doc(id).get();
 
     if (!doc.exists) {
       responseData = buildResponseData(
         false,
-        "Form with the given ID was not found.",
+        'Form with the given ID was not found.',
         null
       );
 
       return res.status(404).json(responseData);
     }
 
-    const data = { id: doc.id, ...doc.data() };
+    const data = {id: doc.id, ...doc.data()};
     responseData = buildResponseData(true, null, data);
 
     res.json(responseData);
@@ -80,19 +76,19 @@ const addForm = async (req, res) => {
       return res.status(422).json(responseData);
     }
 
-    let newItem = ({ name } = req.body);
+    let newItem = ({name} = req.body);
 
     newItem = {
       ...newItem,
       createdBy: req.user.nip,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     const docRef = await FORMS_REF.add(newItem);
 
     const data = {
       id: docRef.id,
-      ...newItem
+      ...newItem,
     };
 
     responseData = buildResponseData(true, null, data);
@@ -111,13 +107,13 @@ const addForm = async (req, res) => {
 
 const updateForm = async (req, res) => {
   try {
-    const { id } = req.params;
+    const {id} = req.params;
 
     const doc = await FORMS_REF.doc(id).get();
     if (!doc.exists) {
       responseData = buildResponseData(
         false,
-        "Form with the given ID was not found.",
+        'Form with the given ID was not found.',
         null
       );
 
@@ -126,17 +122,17 @@ const updateForm = async (req, res) => {
 
     const prevData = doc.data();
 
-    const { name } = req.body;
+    const {name} = req.body;
 
     const updatedItem = {
-      name: name || prevData.name
+      name: name || prevData.name,
     };
 
     const docRef = await FORMS_REF.doc(id).update(updatedItem);
 
     const data = {
       id: docRef.id,
-      ...updatedItem
+      ...updatedItem,
     };
     responseData = buildResponseData(true, null, data);
 
@@ -154,13 +150,13 @@ const updateForm = async (req, res) => {
 
 const deleteForm = async (req, res) => {
   try {
-    const { id } = req.params;
+    const {id} = req.params;
 
     const doc = await FORMS_REF.doc(id).get();
     if (!doc.exists) {
       responseData = buildResponseData(
         false,
-        "Form with the given ID was not found.",
+        'Form with the given ID was not found.',
         null
       );
 
@@ -188,5 +184,5 @@ module.exports = {
   addFormsValidation,
   addForm,
   updateForm,
-  deleteForm
+  deleteForm,
 };
