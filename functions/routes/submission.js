@@ -128,45 +128,54 @@ const addSubmission = async (req, res) => {
   }
 };
 
-const updateTimeline = async (req, res) => {
-  // try {
-  //   const {id} = req.params;
-  //   const doc = await TIMELINE_REF.doc(id).get();
-  //   if (!doc.exists) {
-  //     responseData = buildResponseData(
-  //       false,
-  //       'Timeline with the given ID was not found.',
-  //       null
-  //     );
-  //     return res.status(404).json(responseData);
-  //   }
-  //   const prevData = doc.data();
-  //   const {title, type, startDate, endDate, forms, positions} = req.body;
-  //   const updatedItem = {
-  //     title: title || prevData.title,
-  //     type: type || prevData.type,
-  //     startDate: startDate || prevData.startDate,
-  //     endDate: endDate || prevData.endDate,
-  //     forms: forms || prevData.forms,
-  //     positions: positions || prevData.positions,
-  //     updatedBy: req.user.nip,
-  //     updatedAt: new Date().toISOString(),
-  //   };
-  //   const docRef = await TIMELINE_REF.doc(id).update(updatedItem);
-  //   const data = {
-  //     id: docRef.id,
-  //     ...updatedItem,
-  //   };
-  //   responseData = buildResponseData(true, null, data);
-  //   res.json(responseData);
-  // } catch (error) {
-  //   responseData = buildResponseData(
-  //     false,
-  //     buildErrorMessage(actionType.UPDATING, CONTEXT) + error.message,
-  //     null
-  //   );
-  //   res.status(500).json(responseData);
-  // }
+const updateScore = async (req, res) => {
+  try {
+    const {id} = req.params;
+    const doc = await SUBMISSION_REF.doc(id).get();
+    console.log(doc, 'ASDASDASDSA');
+    console.log(req.body);
+    if (!doc.exists) {
+      responseData = buildResponseData(
+        false,
+        'Timeline with the given ID was not found.',
+        null
+      );
+      return res.status(404).json(responseData);
+    }
+    const prevData = doc.data();
+    const {score} = req.body;
+    // const updatedItem = {
+    //   title: title || prevData.title,
+    //   type: type || prevData.type,
+    //   startDate: startDate || prevData.startDate,
+    //   endDate: endDate || prevData.endDate,
+    //   forms: forms || prevData.forms,
+    //   positions: positions || prevData.positions,
+    //   updatedBy: req.user.nip,
+    //   updatedAt: new Date().toISOString(),
+    // };
+    const updatedScore = {
+      score: {
+        psikotesScore: score.psikotesScore || prevData.score.psikotesScore,
+        interviewScore: score.interviewScore || prevData.score.interviewScore,
+        academicScore: score.academicScore || prevData.score.academicScore,
+      },
+    };
+    const docRef = await SUBMISSION_REF.doc(id).update(updatedScore);
+    const data = {
+      id: docRef.id,
+      ...updatedScore,
+    };
+    responseData = buildResponseData(true, null, data);
+    res.json(responseData);
+  } catch (error) {
+    responseData = buildResponseData(
+      false,
+      buildErrorMessage(actionType.UPDATING, CONTEXT) + error.message,
+      null
+    );
+    res.status(500).json(responseData);
+  }
 };
 
 const deleteTimeline = async (req, res) => {
@@ -199,6 +208,6 @@ module.exports = {
   getTimeline,
   addTimelineValidation,
   addSubmission,
-  updateTimeline,
+  updateScore,
   deleteTimeline,
 };

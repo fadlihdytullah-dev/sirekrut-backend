@@ -39,7 +39,11 @@ const {
   deleteTimeline,
 } = require('./routes/timelines');
 
-const {addSubmission, getSubmissions} = require('./routes/submission');
+const {
+  addSubmission,
+  getSubmissions,
+  updateScore,
+} = require('./routes/submission');
 
 const {
   getForm,
@@ -48,6 +52,8 @@ const {
   addForm,
   updateForm,
   deleteForm,
+  formSettings,
+  getFormSettings,
 } = require('./routes/forms');
 
 app.use(cors());
@@ -91,12 +97,14 @@ app.delete('/timelines/:id', [FBAuthMiddleware], deleteTimeline);
 app.get('/submission', getSubmissions);
 app.get('/submission/:id', getTimeline);
 app.post('/submission', [FBAuthMiddleware], addSubmission);
-app.put('/submission/:id', [FBAuthMiddleware], updateTimeline);
+app.put('/submission/:id', [FBAuthMiddleware], updateScore);
 app.delete('/submission/:id', [FBAuthMiddleware], deleteTimeline);
 
 // 🛣 Forms Route
 app.get('/forms', getForms);
 app.get('/forms/:id', getForm);
+app.put('/forms/conf', formSettings);
+app.get('/forms-conf', getFormSettings);
 app.post('/forms', [FBAuthMiddleware, addFormsValidation], addForm);
 app.put('/forms/:id', [FBAuthMiddleware], updateForm);
 app.delete('/forms/:id', [FBAuthMiddleware], deleteForm);
