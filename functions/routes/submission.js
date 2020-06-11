@@ -22,12 +22,17 @@ const addTimelineValidation = [
 ];
 
 const getSubmissions = async (req, res) => {
+  let {filterValue, filter} = req.query;
+  filter = filter || 'status';
+  filterValue = filter === 'status' ? parseInt(filterValue) : filterValue;
+  console.log(filterValue, filter, 'ASDSAJSAASLKDSANkj');
   try {
     const timelines = [];
 
-    const querySnapshot = await SUBMISSION_REF.orderBy(
-      'createdAt',
-      'desc'
+    const querySnapshot = await SUBMISSION_REF.where(
+      filter,
+      '==',
+      filterValue
     ).get();
     querySnapshot.forEach((doc) => timelines.push({id: doc.id, ...doc.data()}));
 
@@ -144,16 +149,7 @@ const updateScore = async (req, res) => {
     }
     const prevData = doc.data();
     const {score} = req.body;
-    // const updatedItem = {
-    //   title: title || prevData.title,
-    //   type: type || prevData.type,
-    //   startDate: startDate || prevData.startDate,
-    //   endDate: endDate || prevData.endDate,
-    //   forms: forms || prevData.forms,
-    //   positions: positions || prevData.positions,
-    //   updatedBy: req.user.nip,
-    //   updatedAt: new Date().toISOString(),
-    // };
+
     const updatedScore = {
       score: {
         psikotesScore: score.psikotesScore || prevData.score.psikotesScore,
@@ -167,6 +163,39 @@ const updateScore = async (req, res) => {
       ...updatedScore,
     };
     responseData = buildResponseData(true, null, data);
+    res.json(responseData);
+  } catch (error) {
+    responseData = buildResponseData(
+      false,
+      buildErrorMessage(actionType.UPDATING, CONTEXT) + error.message,
+      null
+    );
+    res.status(500).json(responseData);
+  }
+};
+
+const updateStatus = async (req, res) => {
+  const {applicants, updatedStatus} = req.body;
+  console.log(req.body, 'THIS IS REQ BODY UPDATE SUBMISSIONS');
+  try {
+    const updateAllStatus = async () => {
+      const dataUpdate = applicants.map(async (id) => {
+        const docRef = await SUBMISSION_REF.doc(id).update({
+          status: updatedStatus,
+        });
+        console.log(docRef);
+        const data = {
+          id: docRef.id,
+          status: true,
+        };
+        return true;
+      });
+      const promiseDone = Promise.all(dataUpdate);
+      return promiseDone;
+    };
+
+    const updateStatus = await updateAllStatus();
+    responseData = buildResponseData(true, null, {applicants, updatedStatus});
     res.json(responseData);
   } catch (error) {
     responseData = buildResponseData(
@@ -209,5 +238,6 @@ module.exports = {
   addTimelineValidation,
   addSubmission,
   updateScore,
+  updateStatus,
   deleteTimeline,
 };
