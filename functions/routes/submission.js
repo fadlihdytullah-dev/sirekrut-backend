@@ -22,18 +22,24 @@ const addTimelineValidation = [
 ];
 
 const getSubmissions = async (req, res) => {
-  let {filterValue, filter} = req.query;
+  let {filterValue, filter, periode} = req.query;
   filter = filter || 'status';
   filterValue = filter === 'status' ? parseInt(filterValue) : filterValue;
   console.log(filterValue, filter, 'ASDSAJSAASLKDSANkj');
   try {
     const timelines = [];
-
-    const querySnapshot = await SUBMISSION_REF.where(
-      filter,
-      '==',
-      filterValue
-    ).get();
+    let querySnapshot;
+    if (periode) {
+      querySnapshot = await SUBMISSION_REF.where(filter, '==', filterValue)
+        .where('periodId', '==', periode)
+        .get();
+    } else {
+      querySnapshot = await SUBMISSION_REF.where(
+        filter,
+        '==',
+        filterValue
+      ).get();
+    }
     querySnapshot.forEach((doc) => timelines.push({id: doc.id, ...doc.data()}));
 
     responseData = buildResponseData(true, null, timelines);
