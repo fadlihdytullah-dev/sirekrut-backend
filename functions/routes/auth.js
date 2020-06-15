@@ -1,38 +1,26 @@
-const { firebase, db, admin } = require("./../utils/admin");
-const { check, validationResult } = require("express-validator");
+const {firebase, db, admin} = require('./../utils/admin');
+const {check, validationResult} = require('express-validator');
 const {
   getErrorListFromValidator,
   buildResponseData,
-  buildErrorMessage
-} = require("./../utils/helper");
-const { actionType } = require("./../utils/constants");
+  buildErrorMessage,
+} = require('./../utils/helper');
+const {actionType} = require('./../utils/constants');
 
-const CONTEXT = "user(s)";
+const CONTEXT = 'user(s)';
 
-const USERS_REF = db.collection("users");
+const USERS_REF = db.collection('users');
 
 const addAdminValidation = [
-  check("nip")
-    .isString()
-    .notEmpty(),
-  check("email")
-    .isEmail()
-    .notEmpty(),
-  check("password")
-    .isString()
-    .notEmpty(),
-  check("confirmPassword")
-    .isString()
-    .notEmpty()
+  check('nip').isString().notEmpty(),
+  check('email').isEmail().notEmpty(),
+  check('password').isString().notEmpty(),
+  check('confirmPassword').isString().notEmpty(),
 ];
 
 const loginAdminValidation = [
-  check("email")
-    .isEmail()
-    .notEmpty(),
-  check("password")
-    .isString()
-    .notEmpty()
+  check('email').isEmail().notEmpty(),
+  check('password').isString().notEmpty(),
 ];
 
 let responseData;
@@ -43,11 +31,11 @@ const FBAuthMiddleware = async (req, res, next) => {
   try {
     if (
       req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer ")
+      req.headers.authorization.startsWith('Bearer ')
     ) {
-      tokenKey = req.headers.authorization.split("Bearer ")[1];
+      tokenKey = req.headers.authorization.split('Bearer ')[1];
     } else {
-      responseData = buildResponseData(false, "Unauthorized");
+      responseData = buildResponseData(false, 'Unauthorized');
 
       return res.status(403).json(responseData);
     }
@@ -55,7 +43,7 @@ const FBAuthMiddleware = async (req, res, next) => {
     const decodedToken = await admin.auth().verifyIdToken(tokenKey);
 
     req.user = decodedToken;
-    const userData = await USERS_REF.where("userId", "==", req.user.uid)
+    const userData = await USERS_REF.where('userId', '==', req.user.uid)
       .limit(1)
       .get();
 
@@ -65,7 +53,7 @@ const FBAuthMiddleware = async (req, res, next) => {
   } catch (error) {
     responseData = buildResponseData(
       false,
-      "Error while verifying token.",
+      'Error while verifying token.',
       null
     );
 
@@ -85,12 +73,12 @@ const addAdmin = async (req, res) => {
       return res.status(422).json(responseData);
     }
 
-    const { nip, email, password, confirmPassword } = req.body;
+    const {nip, email, password, confirmPassword} = req.body;
 
     if (password !== confirmPassword) {
       responseData = buildResponseData(
         false,
-        "Password and Confirm Password must be same.",
+        'Password and Confirm Password must be same.',
         null
       );
 
@@ -101,7 +89,7 @@ const addAdmin = async (req, res) => {
     const userDocument = await USERS_REF.doc(nip).get();
 
     if (userDocument.exists) {
-      responseData = buildResponseData(false, "NIP Already taken.", null);
+      responseData = buildResponseData(false, 'NIP Already taken.', null);
 
       return res.status(400).json(responseData);
     }
@@ -118,17 +106,17 @@ const addAdmin = async (req, res) => {
       nip,
       email,
       createdAt: new Date().toISOString(),
-      userId
+      userId,
     };
 
     await USERS_REF.doc(nip).set(userCredentials);
 
-    responseData = buildResponseData(true, null, { token: tokenKey });
+    responseData = buildResponseData(true, null, {token: tokenKey});
 
     res.status(201).json(responseData);
   } catch (error) {
-    if (error.code === "auth/email-already-in-use") {
-      responseData = buildResponseData(false, "Email already taken.", null);
+    if (error.code === 'auth/email-already-in-use') {
+      responseData = buildResponseData(false, 'Email already taken.', null);
 
       return res.status(400).json(responseData);
     }
@@ -144,6 +132,7 @@ const addAdmin = async (req, res) => {
 };
 
 const loginAdmin = async (req, res) => {
+  console.log(req.body, 'this is credintial');
   try {
     const errors = validationResult(req);
     const hasError = getErrorListFromValidator(errors);
@@ -154,7 +143,7 @@ const loginAdmin = async (req, res) => {
       return res.status(422).json(responseData);
     }
 
-    const { email, password } = req.body;
+    const {email, password} = req.body;
 
     const userData = await firebase
       .auth()
@@ -162,12 +151,13 @@ const loginAdmin = async (req, res) => {
 
     const tokenKey = await userData.user.getIdToken();
 
-    responseData = buildResponseData(true, null, { token: tokenKey });
+    responseData = buildResponseData(true, null, {token: tokenKey});
 
     res.json(responseData);
   } catch (error) {
-    if (error.code === "auth/wrong-password") {
-      responseData = buildResponseData(false, "Wrong credentials.", null);
+    console.log(error);
+    if (error.code === 'auth/wrong-password') {
+      responseData = buildResponseData(false, 'Wrong credentials.', null);
 
       return res.status(403).json(responseData);
     }
@@ -187,5 +177,5 @@ module.exports = {
   addAdminValidation,
   loginAdminValidation,
   loginAdmin,
-  FBAuthMiddleware
+  FBAuthMiddleware,
 };
