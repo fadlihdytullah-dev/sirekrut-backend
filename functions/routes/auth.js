@@ -1,4 +1,5 @@
 const {firebase, db, admin} = require('./../utils/admin');
+const jwt = require('jsonwebtoken');
 const {check, validationResult} = require('express-validator');
 const {
   getErrorListFromValidator,
@@ -40,8 +41,9 @@ const FBAuthMiddleware = async (req, res, next) => {
       return res.status(403).json(responseData);
     }
 
-    const decodedToken = await admin.auth().verifyIdToken(tokenKey);
-
+    // const decodedToken = await admin.auth().verifyIdToken(tokenKey);
+    const decodedToken = jwt.verify(tokenKey, 'meongmeongmeong');
+    console.log(decodedToken, 'Decode TOken');
     req.user = decodedToken;
     const userData = await USERS_REF.where('userId', '==', req.user.uid)
       .limit(1)
@@ -62,6 +64,8 @@ const FBAuthMiddleware = async (req, res, next) => {
 };
 
 const addAdmin = async (req, res) => {
+  console.log('WAWAWA');
+  console.log(req.body, 'this is from req.body');
   try {
     const errors = validationResult(req);
 
@@ -73,7 +77,7 @@ const addAdmin = async (req, res) => {
       return res.status(422).json(responseData);
     }
 
-    const {nip, email, password, confirmPassword} = req.body;
+    const {nip, email, password, confirmPassword, name} = req.body;
 
     if (password !== confirmPassword) {
       responseData = buildResponseData(
@@ -100,14 +104,16 @@ const addAdmin = async (req, res) => {
 
     const userId = userData.user.uid;
 
-    const tokenKey = await userData.user.getIdToken();
+    const tokenKey = await userData.user.getIdToken(true);
 
     const userCredentials = {
       nip,
+      name,
       email,
       createdAt: new Date().toISOString(),
       userId,
     };
+    console.log(userCredentials);
 
     await USERS_REF.doc(nip).set(userCredentials);
 
@@ -115,6 +121,7 @@ const addAdmin = async (req, res) => {
 
     res.status(201).json(responseData);
   } catch (error) {
+    console.log({error});
     if (error.code === 'auth/email-already-in-use') {
       responseData = buildResponseData(false, 'Email already taken.', null);
 
@@ -128,6 +135,27 @@ const addAdmin = async (req, res) => {
     );
 
     res.status(500).json(responseData);
+  }
+};
+
+const getUsers = async (req, res) => {
+  try {
+    const users = [];
+
+    const querySnapshot = await USERS_REF.orderBy('createdAt', 'desc').get();
+    querySnapshot.forEach((doc) => users.push({id: doc.id, ...doc.data()}));
+
+    responseData = buildResponseData(true, null, users);
+
+    res.json(responseData);
+  } catch (error) {
+    responseData = buildResponseData(
+      false,
+      buildErrorMessage(actionType.RETRIEVING, CONTEXT),
+      null
+    );
+
+    res.send(responseData);
   }
 };
 
@@ -147,11 +175,14 @@ const loginAdmin = async (req, res) => {
 
     const userData = await firebase
       .auth()
-      .signInWithEmailAndPassword(email, password);
+      .signInWithEmailAndPassword(email, password)
+      .then();
 
-    const tokenKey = await userData.user.getIdToken();
+    const token = jwt.sign({uid: userData.user.uid}, 'meongmeongmeong', {
+      expiresIn: '7d',
+    });
 
-    responseData = buildResponseData(true, null, {token: tokenKey});
+    responseData = buildResponseData(true, null, {token});
 
     res.json(responseData);
   } catch (error) {
@@ -172,10 +203,44 @@ const loginAdmin = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  try {
+    const {id} = req.params;
+
+    const doc = await USERS_REF.doc(id).get();
+    console.log(doc.data(), 'INI DOC WHEN DELETED');
+    if (!doc.exists) {
+      responseData = buildResponseData(
+        false,
+        'User with the given ID was not found.',
+        null
+      );
+
+      return res.status(404).json(responseData);
+    }
+
+    await admin.auth().deleteUser(doc.data().userId);
+    await USERS_REF.doc(id).delete();
+    responseData = buildResponseData(true, null, null);
+
+    res.json(responseData);
+  } catch (error) {
+    responseData = buildResponseData(
+      false,
+      buildErrorMessage(actionType.DELETING, CONTEXT),
+      null
+    );
+
+    res.json(responseData);
+  }
+};
+
 module.exports = {
   addAdmin,
+  getUsers,
   addAdminValidation,
   loginAdminValidation,
   loginAdmin,
   FBAuthMiddleware,
+  deleteUser,
 };

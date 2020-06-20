@@ -7,7 +7,9 @@ const app = express();
 const {
   addAdmin,
   addAdminValidation,
+  getUsers,
   loginAdmin,
+  deleteUser,
   loginAdminValidation,
   FBAuthMiddleware,
 } = require('./routes/auth');
@@ -43,6 +45,7 @@ const {
   addSubmission,
   getSubmissions,
   updateStatus,
+  updateStatusAgreement,
   updateScore,
 } = require('./routes/submission');
 
@@ -64,7 +67,8 @@ app.use(express.urlencoded({extended: true}));
 // 🛣 Auth Route
 app.post('/register', addAdminValidation, addAdmin);
 app.post('/login', loginAdminValidation, loginAdmin);
-
+app.get('/users', getUsers);
+app.delete('/users/:id', deleteUser);
 // 🛣 Positions Route
 app.get('/positions', getPositions);
 app.get('/positions/:id', getPosition);
@@ -99,6 +103,7 @@ app.get('/submission', getSubmissions);
 app.get('/submission/:id', getTimeline);
 app.post('/submission', addSubmission);
 app.put('/submissions-update', updateStatus);
+app.put('/submissions-update/agreement', updateStatusAgreement);
 app.put('/submission/:id', [FBAuthMiddleware], updateScore);
 app.delete('/submission/:id', [FBAuthMiddleware], deleteTimeline);
 

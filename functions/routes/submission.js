@@ -25,14 +25,22 @@ const getSubmissions = async (req, res) => {
   let {filterValue, filter, periode} = req.query;
   filter = filter || 'status';
   filterValue = filter === 'status' ? parseInt(filterValue) : filterValue;
-  console.log(filterValue, filter, 'ASDSAJSAASLKDSANkj');
+  console.log(filterValue, filter, periode, 'ASDSAJSAASLKDSANkj');
   try {
     const timelines = [];
     let querySnapshot;
+
     if (periode) {
       querySnapshot = await SUBMISSION_REF.where(filter, '==', filterValue)
         .where('periodId', '==', periode)
         .get();
+    } else if (periode === 'ALL') {
+      console.log('ALL SHOWING');
+      querySnapshot = await SUBMISSION_REF.where(
+        filter,
+        '==',
+        filterValue
+      ).get();
     } else {
       querySnapshot = await SUBMISSION_REF.where(
         filter,
@@ -114,7 +122,7 @@ const addSubmission = async (req, res) => {
       ...newItem,
       status: 0,
       score: {academicScore: 0, psikotesScore: 0, interviewScore: 0},
-      passed: false,
+      passed: 0,
       createdAt: new Date().toISOString(),
     };
 
@@ -213,6 +221,26 @@ const updateStatus = async (req, res) => {
   }
 };
 
+const updateStatusAgreement = async (req, res) => {
+  const {id, updatedStatus} = req.body;
+  console.log(req.body, 'THIS IS REQ BODY UPDATE SUBMISSIONS');
+  try {
+    const docRef = await SUBMISSION_REF.doc(id).update({
+      passed: updatedStatus,
+    });
+
+    responseData = buildResponseData(true, null, {id, updatedStatus});
+    res.json(responseData);
+  } catch (error) {
+    responseData = buildResponseData(
+      false,
+      buildErrorMessage(actionType.UPDATING, CONTEXT) + error.message,
+      null
+    );
+    res.status(500).json(responseData);
+  }
+};
+
 const deleteTimeline = async (req, res) => {
   // try {
   //   const {id} = req.params;
@@ -246,4 +274,5 @@ module.exports = {
   updateScore,
   updateStatus,
   deleteTimeline,
+  updateStatusAgreement,
 };
