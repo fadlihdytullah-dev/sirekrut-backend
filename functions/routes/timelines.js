@@ -14,10 +14,8 @@ let responseData;
 
 const addTimelineValidation = [
   check('title').isString().notEmpty(),
-  check('type').isIn(['STAFF', 'DOSEN', 'PROFESSIONAL']).notEmpty(),
   check('startDate').isString().notEmpty(),
   check('endDate').isString().notEmpty(),
-  check('forms').isArray().notEmpty(),
   check('positions').isArray().notEmpty(),
 ];
 
@@ -83,14 +81,7 @@ const addTimeline = async (req, res) => {
       return res.status(422).json(responseData);
     }
 
-    let newItem = ({
-      title,
-      type,
-      startDate,
-      endDate,
-      forms,
-      positions,
-    } = req.body);
+    let newItem = ({title, type, startDate, endDate, positions} = req.body);
 
     newItem = {
       ...newItem,
@@ -136,14 +127,13 @@ const updateTimeline = async (req, res) => {
 
     const prevData = doc.data();
 
-    const {title, type, startDate, endDate, forms, positions} = req.body;
+    const {title, type, startDate, endDate, positions} = req.body;
 
     const updatedItem = {
       title: title || prevData.title,
       type: type || prevData.type,
       startDate: startDate || prevData.startDate,
       endDate: endDate || prevData.endDate,
-      forms: forms || prevData.forms,
       positions: positions || prevData.positions,
       updatedBy: req.user.nip,
       updatedAt: new Date().toISOString(),
