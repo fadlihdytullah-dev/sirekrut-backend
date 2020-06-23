@@ -101,9 +101,13 @@ app.delete('/timelines/:id', [FBAuthMiddleware], deleteTimeline);
 // 🛣 Submission Route
 app.get('/submission', getSubmissions);
 app.get('/submission/:id', getTimeline);
-app.post('/submission', addSubmission);
-app.put('/submissions-update', updateStatus);
-app.put('/submissions-update/agreement', updateStatusAgreement);
+app.post('/submission', [FBAuthMiddleware], addSubmission);
+app.put('/submissions-update', [FBAuthMiddleware], updateStatus);
+app.put(
+  '/submissions-update/agreement',
+  [FBAuthMiddleware],
+  updateStatusAgreement
+);
 app.put('/submission/:id', [FBAuthMiddleware], updateScore);
 app.delete('/submission/:id', [FBAuthMiddleware], deleteTimeline);
 
