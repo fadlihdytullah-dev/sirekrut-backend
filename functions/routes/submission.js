@@ -8,6 +8,7 @@ const {
 } = require('../utils/helper');
 
 const SUBMISSION_REF = db.collection('submissions');
+const TIMELINE_REF = db.collection('timelines');
 const CONTEXT = 'submission timeline(s)';
 
 let responseData;
@@ -222,14 +223,47 @@ const updateStatus = async (req, res) => {
 };
 
 const updateStatusAgreement = async (req, res) => {
-  const {id, updatedStatus} = req.body;
+  const {id, updatedStatus, positionId, periodId} = req.body;
   console.log(req.body, 'THIS IS REQ BODY UPDATE SUBMISSIONS');
   try {
-    const docRef = await SUBMISSION_REF.doc(id).update({
-      passed: updatedStatus,
-    });
+    const getAllAplicantsFromPositions = await SUBMISSION_REF.where(
+      'positionId',
+      '==',
+      positionId
+    )
+      .where('periodId', '==', periodId)
+      .where('passed', '==', 2)
+      .get();
+    const totalAcceptApplicant = getAllAplicantsFromPositions.docs.length;
+    const getQuotaFromPeriode = await TIMELINE_REF.doc(periodId).get();
+    const getPosition = await getQuotaFromPeriode
+      .data()
+      .positions.filter((data) => data.positionID === positionId);
 
-    responseData = buildResponseData(true, null, {id, updatedStatus});
+    console.log(getAllAplicantsFromPositions.docs.length, 'THIS IS POSITION');
+    console.log(
+      getPosition[0].quota >= totalAcceptApplicant,
+      `THIS IS PERIODE QUOTA :  ${getPosition[0].quota} & TOTAL APPPLICANT  : ${totalAcceptApplicant}`
+    );
+    if (totalAcceptApplicant >= getPosition[0].quota) {
+      console.log(
+        `TOTAL ACCEPTED APPLICANTS ${totalAcceptApplicant}, TOTAL QUOTA ${getPosition[0].quota} : TRUE`
+      );
+      responseData = buildResponseData(
+        false,
+        'Jumlah lulusan telah cukup',
+        null
+      );
+    } else {
+      console.log(
+        `TOTAL ACCEPTED APPLICANTS ${typeof totalAcceptApplicant}, TOTAL QUOTA ${typeof getPosition[0]
+          .quota} : FALSE`
+      );
+      const docRef = await SUBMISSION_REF.doc(id).update({
+        passed: updatedStatus,
+      });
+      responseData = buildResponseData(true, null, {id, updatedStatus});
+    }
     res.json(responseData);
   } catch (error) {
     responseData = buildResponseData(
