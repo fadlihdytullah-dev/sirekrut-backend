@@ -122,7 +122,6 @@ const formSettings = async (req, res) => {
     const prevData = doc.data();
 
     const {showToefl, show360} = req.body;
-    console.log(req.body);
 
     const updatedItem = {
       showToefl,
@@ -152,7 +151,6 @@ const formSettings = async (req, res) => {
 const getFormSettings = async (req, res) => {
   try {
     const doc = await FORMS_CONF.doc('data').get();
-    console.log(doc);
 
     const data = {...doc.data()};
     responseData = buildResponseData(true, null, data);

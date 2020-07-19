@@ -1,5 +1,8 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./../serviceAccount.json');
+const path = require('path');
+const serviceAccount = require(path.resolve(
+  __dirname + '/../serviceAccount.json'
+));
 require('dotenv').config();
 
 // const firebaseConfig = {

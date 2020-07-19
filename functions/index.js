@@ -10,6 +10,7 @@ const {
   getUsers,
   loginAdmin,
   deleteUser,
+  changeUserStatus,
   loginAdminValidation,
   FBAuthMiddleware,
 } = require('./routes/auth');
@@ -69,6 +70,7 @@ app.post('/register', addAdminValidation, addAdmin);
 app.post('/login', loginAdminValidation, loginAdmin);
 app.get('/users', getUsers);
 app.delete('/users/:id', deleteUser);
+app.put('/users/:id', changeUserStatus);
 // 🛣 Positions Route
 app.get('/positions', getPositions);
 app.get('/positions/:id', getPosition);

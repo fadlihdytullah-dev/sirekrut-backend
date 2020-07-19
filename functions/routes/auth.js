@@ -43,7 +43,6 @@ const FBAuthMiddleware = async (req, res, next) => {
 
     // const decodedToken = await admin.auth().verifyIdToken(tokenKey);
     const decodedToken = jwt.verify(tokenKey, 'meongmeongmeong');
-    console.log(decodedToken, 'Decode TOken');
     req.user = decodedToken;
     const userData = await USERS_REF.where('userId', '==', req.user.uid)
       .limit(1)
@@ -64,8 +63,6 @@ const FBAuthMiddleware = async (req, res, next) => {
 };
 
 const addAdmin = async (req, res) => {
-  console.log('WAWAWA');
-  console.log(req.body, 'this is from req.body');
   try {
     const errors = validationResult(req);
 
@@ -112,8 +109,8 @@ const addAdmin = async (req, res) => {
       email,
       createdAt: new Date().toISOString(),
       userId,
+      status: 'ACTIVE',
     };
-    console.log(userCredentials);
 
     await USERS_REF.doc(nip).set(userCredentials);
 
@@ -121,7 +118,6 @@ const addAdmin = async (req, res) => {
 
     res.status(201).json(responseData);
   } catch (error) {
-    console.log({error});
     if (error.code === 'auth/email-already-in-use') {
       responseData = buildResponseData(false, 'Email already taken.', null);
 
@@ -160,7 +156,6 @@ const getUsers = async (req, res) => {
 };
 
 const loginAdmin = async (req, res) => {
-  console.log(req.body, 'this is credintial');
   try {
     const errors = validationResult(req);
     const hasError = getErrorListFromValidator(errors);
@@ -186,7 +181,6 @@ const loginAdmin = async (req, res) => {
 
     res.json(responseData);
   } catch (error) {
-    console.log(error);
     if (error.code === 'auth/wrong-password') {
       responseData = buildResponseData(false, 'Wrong credentials.', null);
 
@@ -208,7 +202,6 @@ const deleteUser = async (req, res) => {
     const {id} = req.params;
 
     const doc = await USERS_REF.doc(id).get();
-    console.log(doc.data(), 'INI DOC WHEN DELETED');
     if (!doc.exists) {
       responseData = buildResponseData(
         false,
@@ -235,6 +228,39 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const changeUserStatus = async (req, res) => {
+  // console.log('>>>PARAMS', req.params);
+  let {id} = req.params;
+  // // if (status !== 'ACTIVE' && status !== 'NONACTIVE') {
+  // //   status = 'ACTIVE';
+  // // }
+
+  const doc = await USERS_REF.doc(id).get();
+
+  if (!doc.exists) {
+    responseData = buildResponseData(
+      false,
+      'User with the given NIP was not found.',
+      null
+    );
+
+    return res.status(404).json(responseData);
+  }
+
+  const data = doc.data();
+  const status = data.status === 'ACTIVE' ? 'NONACTIVE' : 'ACTIVE';
+  const updatedData = {
+    ...data,
+    status,
+  };
+
+  const docRef = await USERS_REF.doc(id).update(updatedData);
+
+  responseData = buildResponseData(true, null, doc.data() || {});
+
+  res.json(responseData);
+};
+
 module.exports = {
   addAdmin,
   getUsers,
@@ -243,4 +269,5 @@ module.exports = {
   loginAdmin,
   FBAuthMiddleware,
   deleteUser,
+  changeUserStatus,
 };

@@ -13,20 +13,10 @@ const CONTEXT = 'submission timeline(s)';
 
 let responseData;
 
-const addTimelineValidation = [
-  check('title').isString().notEmpty(),
-  check('type').isIn(['STAFF', 'DOSEN', 'PROFESSIONAL']).notEmpty(),
-  check('startDate').isString().notEmpty(),
-  check('endDate').isString().notEmpty(),
-  check('forms').isArray().notEmpty(),
-  check('positions').isArray().notEmpty(),
-];
-
 const getSubmissions = async (req, res) => {
   let {filterValue, filter, periode} = req.query;
   filter = filter || 'status';
   filterValue = filter === 'status' ? parseInt(filterValue) : filterValue;
-  console.log(filterValue, filter, periode, 'ASDSAJSAASLKDSANkj');
   try {
     const timelines = [];
     let querySnapshot;
@@ -36,7 +26,6 @@ const getSubmissions = async (req, res) => {
         .where('periodId', '==', periode)
         .get();
     } else if (periode === 'ALL') {
-      console.log('ALL SHOWING');
       querySnapshot = await SUBMISSION_REF.where(
         filter,
         '==',
@@ -63,31 +52,6 @@ const getSubmissions = async (req, res) => {
 
     res.send(responseData);
   }
-};
-
-const getTimeline = async (req, res) => {
-  // try {
-  //   const {id} = req.params;
-  //   const doc = await TIMELINE_REF.doc(id).get();
-  //   if (!doc.exists) {
-  //     responseData = buildResponseData(
-  //       false,
-  //       'Timeline with the given ID was not found.',
-  //       null
-  //     );
-  //     return res.status(404).json(responseData);
-  //   }
-  //   const data = {id: doc.id, ...doc.data()};
-  //   responseData = buildResponseData(true, null, data);
-  //   res.json(responseData);
-  // } catch (error) {
-  //   responseData = buildResponseData(
-  //     false,
-  //     buildErrorMessage(actionType.RETRIEVING, CONTEXT),
-  //     null
-  //   );
-  //   res.json(responseData);
-  // }
 };
 
 const addSubmission = async (req, res) => {
@@ -152,8 +116,6 @@ const updateScore = async (req, res) => {
   try {
     const {id} = req.params;
     const doc = await SUBMISSION_REF.doc(id).get();
-    console.log(doc, 'ASDASDASDSA');
-    console.log(req.body);
     if (!doc.exists) {
       responseData = buildResponseData(
         false,
@@ -191,14 +153,12 @@ const updateScore = async (req, res) => {
 
 const updateStatus = async (req, res) => {
   const {applicants, updatedStatus} = req.body;
-  console.log(req.body, 'THIS IS REQ BODY UPDATE SUBMISSIONS');
   try {
     const updateAllStatus = async () => {
       const dataUpdate = applicants.map(async (id) => {
         const docRef = await SUBMISSION_REF.doc(id).update({
           status: updatedStatus,
         });
-        console.log(docRef);
         const data = {
           id: docRef.id,
           status: true,
@@ -224,7 +184,6 @@ const updateStatus = async (req, res) => {
 
 const updateStatusAgreement = async (req, res) => {
   const {id, updatedStatus, positionId, periodId} = req.body;
-  console.log(req.body, 'THIS IS REQ BODY UPDATE SUBMISSIONS');
   try {
     const getAllAplicantsFromPositions = await SUBMISSION_REF.where(
       'positionId',
@@ -240,25 +199,13 @@ const updateStatusAgreement = async (req, res) => {
       .data()
       .positions.filter((data) => data.positionID === positionId);
 
-    console.log(getAllAplicantsFromPositions.docs.length, 'THIS IS POSITION');
-    console.log(
-      getPosition[0].quota >= totalAcceptApplicant,
-      `THIS IS PERIODE QUOTA :  ${getPosition[0].quota} & TOTAL APPPLICANT  : ${totalAcceptApplicant}`
-    );
     if (totalAcceptApplicant >= getPosition[0].quota) {
-      console.log(
-        `TOTAL ACCEPTED APPLICANTS ${totalAcceptApplicant}, TOTAL QUOTA ${getPosition[0].quota} : TRUE`
-      );
       responseData = buildResponseData(
         false,
         'Jumlah lulusan telah cukup',
         null
       );
     } else {
-      console.log(
-        `TOTAL ACCEPTED APPLICANTS ${typeof totalAcceptApplicant}, TOTAL QUOTA ${typeof getPosition[0]
-          .quota} : FALSE`
-      );
       const docRef = await SUBMISSION_REF.doc(id).update({
         passed: updatedStatus,
       });
@@ -275,38 +222,10 @@ const updateStatusAgreement = async (req, res) => {
   }
 };
 
-const deleteTimeline = async (req, res) => {
-  // try {
-  //   const {id} = req.params;
-  //   const doc = await TIMELINE_REF.doc(id).get();
-  //   if (!doc.exists) {
-  //     responseData = buildResponseData(
-  //       false,
-  //       'Timeline with the given ID was not found.',
-  //       null
-  //     );
-  //     return res.status(404).json(responseData);
-  //   }
-  //   await TIMELINE_REF.doc(id).delete();
-  //   responseData = buildResponseData(true, null, null);
-  //   res.json(responseData);
-  // } catch (error) {
-  //   responseData = buildResponseData(
-  //     false,
-  //     buildErrorMessage(actionType.DELETING, CONTEXT),
-  //     null
-  //   );
-  //   res.json(responseData);
-  // }
-};
-
 module.exports = {
   getSubmissions,
-  getTimeline,
-  addTimelineValidation,
   addSubmission,
   updateScore,
   updateStatus,
-  deleteTimeline,
   updateStatusAgreement,
 };
