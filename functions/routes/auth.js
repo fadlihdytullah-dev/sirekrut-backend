@@ -168,18 +168,36 @@ const loginAdmin = async (req, res) => {
 
     const {email, password} = req.body;
 
-    const userData = await firebase
-      .auth()
-      .signInWithEmailAndPassword(email, password)
-      .then();
+    // Check whether the user active/inactive
+    const querySnapshot = await USERS_REF.where('email', '==', email).get();
 
-    const token = jwt.sign({uid: userData.user.uid}, 'meongmeongmeong', {
-      expiresIn: '7d',
+    let status = '';
+
+    querySnapshot.forEach((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        status = data.status;
+      }
     });
 
-    responseData = buildResponseData(true, null, {token});
+    if (status === 'ACTIVE') {
+      const userData = await firebase
+        .auth()
+        .signInWithEmailAndPassword(email, password)
+        .then();
 
-    res.json(responseData);
+      const token = jwt.sign({uid: userData.user.uid}, 'meongmeongmeong', {
+        expiresIn: '7d',
+      });
+
+      responseData = buildResponseData(true, null, {token});
+
+      res.json(responseData);
+    } else {
+      responseData = buildResponseData(false, 'Account Nonactive.', null);
+
+      return res.status(403).json(responseData);
+    }
   } catch (error) {
     if (error.code === 'auth/wrong-password') {
       responseData = buildResponseData(false, 'Wrong credentials.', null);
