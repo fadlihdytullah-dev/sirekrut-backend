@@ -14,14 +14,18 @@ const CONTEXT = 'submission timeline(s)';
 let responseData;
 
 const getSubmissions = async (req, res) => {
-  let {filterValue, filter, periode} = req.query;
+  let {filterValue, filter, periode, determination} = req.query;
   filter = filter || 'status';
   filterValue = filter === 'status' ? parseInt(filterValue) : filterValue;
   try {
     const timelines = [];
     let querySnapshot;
 
-    if (periode) {
+    if (determination) {
+      querySnapshot = await SUBMISSION_REF.where(filter, '==', 6)
+        .where('determination', '==', 2)
+        .get();
+    } else if (periode) {
       querySnapshot = await SUBMISSION_REF.where(filter, '==', filterValue)
         .where('periodId', '==', periode)
         .get();
@@ -38,6 +42,7 @@ const getSubmissions = async (req, res) => {
         filterValue
       ).get();
     }
+
     querySnapshot.forEach((doc) => timelines.push({id: doc.id, ...doc.data()}));
 
     responseData = buildResponseData(true, null, timelines);

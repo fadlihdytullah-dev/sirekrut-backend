@@ -129,6 +129,7 @@ const addPosition = async (req, res) => {
       ...newItem,
       createdBy: req.user.nip,
       createdAt: new Date().toISOString(),
+      status: 'ACTIVE',
     };
 
     const docRef = await POSITIONS_REF.add(newItem);
@@ -225,6 +226,7 @@ const updatePosition = async (req, res) => {
       details: details || prevData.details,
       updatedBy: req.user.nip,
       updatedAt: new Date().toISOString(),
+      status: 'ACTIVE',
     };
 
     const docRef = await POSITIONS_REF.doc(id).update(updatedItem);

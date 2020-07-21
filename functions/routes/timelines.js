@@ -87,6 +87,7 @@ const addTimeline = async (req, res) => {
       ...newItem,
       createdBy: req.user.nip,
       createdAt: new Date().toISOString(),
+      status: 'ACTIVE',
     };
 
     const docRef = await TIMELINE_REF.add(newItem);
@@ -137,6 +138,7 @@ const updateTimeline = async (req, res) => {
       positions: positions || prevData.positions,
       updatedBy: req.user.nip,
       updatedAt: new Date().toISOString(),
+      status: 'ACTIVE',
     };
 
     const docRef = await TIMELINE_REF.doc(id).update(updatedItem);

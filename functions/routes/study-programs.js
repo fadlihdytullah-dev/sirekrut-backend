@@ -91,6 +91,7 @@ const addStudyProgram = async (req, res) => {
       degree,
       createdBy: req.user.nip,
       createdAt: new Date().toISOString(),
+      status: 'ACTIVE',
     };
 
     const docRef = await STUDY_PROGRAMS_REF.add(newItem);
@@ -144,6 +145,7 @@ const updateStudyProgram = async (req, res) => {
       degree,
       updatedBy: req.user.nip,
       updatedAt: new Date().toISOString(),
+      status: 'ACTIVE',
     };
 
     const docRef = await STUDY_PROGRAMS_REF.doc(id).update(updatedItem);
