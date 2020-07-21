@@ -221,32 +221,44 @@ const updateStatusAgreement = async (req, res) => {
 const updateStatusDetermination = async (req, res) => {
   const {id, updatedStatus, positionId, periodId} = req.body;
   try {
-    const getAllAplicantsFromPositions = await SUBMISSION_REF.where(
-      'positionId',
-      '==',
-      positionId
-    )
-      .where('periodId', '==', periodId)
-      .where('determination', '==', 2)
-      .get();
-    const totalAcceptApplicant = getAllAplicantsFromPositions.docs.length;
-    const getQuotaFromPeriode = await TIMELINE_REF.doc(periodId).get();
-    const getPosition = await getQuotaFromPeriode
-      .data()
-      .positions.filter((data) => data.positionID === positionId);
+    if (updatedStatus === 2) {
+      const getAllAplicantsFromPositions = await SUBMISSION_REF.where(
+        'positionId',
+        '==',
+        positionId
+      )
+        .where('periodId', '==', periodId)
+        .where('determination', '==', 2)
+        .get();
+      const totalAcceptApplicant = getAllAplicantsFromPositions.docs.length;
 
-    if (totalAcceptApplicant >= getPosition[0].quota) {
-      responseData = buildResponseData(
-        false,
-        'Jumlah lulusan telah cukup',
-        null
-      );
+      const getQuotaFromPeriode = await TIMELINE_REF.doc(periodId).get();
+
+      if (getQuotaFromPeriode.data()) {
+        const getPosition = await getQuotaFromPeriode
+          .data()
+          .positions.filter((data) => data.positionID === positionId);
+
+        if (totalAcceptApplicant >= getPosition[0].quota) {
+          responseData = buildResponseData(
+            false,
+            'Jumlah lulusan telah cukup',
+            null
+          );
+        } else {
+          const docRef = await SUBMISSION_REF.doc(id).update({
+            determination: updatedStatus,
+          });
+        }
+      }
     } else {
       const docRef = await SUBMISSION_REF.doc(id).update({
         determination: updatedStatus,
       });
+
       responseData = buildResponseData(true, null, {id, updatedStatus});
     }
+
     res.json(responseData);
   } catch (error) {
     responseData = buildResponseData(
