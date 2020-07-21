@@ -10,9 +10,9 @@ const {
   getUsers,
   loginAdmin,
   deleteUser,
+  FBAuthMiddleware,
   changeUserStatus,
   loginAdminValidation,
-  FBAuthMiddleware,
 } = require('./routes/auth');
 
 const {
@@ -22,6 +22,7 @@ const {
   addPosition,
   deletePosition,
   updatePosition,
+  changePositionStatus,
 } = require('./routes/positions');
 
 const {
@@ -31,6 +32,7 @@ const {
   addStudyProgram,
   deleteStudyProgram,
   updateStudyProgram,
+  changeStudyProgramStatus,
 } = require('./routes/study-programs');
 
 const {
@@ -40,6 +42,7 @@ const {
   addTimeline,
   updateTimeline,
   deleteTimeline,
+  changeTimelineStatus,
 } = require('./routes/timelines');
 
 const {
@@ -70,12 +73,14 @@ app.post('/register', addAdminValidation, addAdmin);
 app.post('/login', loginAdminValidation, loginAdmin);
 app.get('/users', getUsers);
 app.delete('/users/:id', deleteUser);
-app.put('/users/:id', changeUserStatus);
+app.put('/users/:id', [FBAuthMiddleware], changeUserStatus);
+
 // 🛣 Positions Route
 app.get('/positions', getPositions);
 app.get('/positions/:id', getPosition);
 app.post('/positions', [addPositionValidation, FBAuthMiddleware], addPosition);
 app.delete('/positions/:id', [FBAuthMiddleware], deletePosition);
+app.put('/positions/edit_status/:id', [FBAuthMiddleware], changePositionStatus);
 app.put('/positions/:id', [FBAuthMiddleware], updatePosition);
 
 // 🛣 Study Programs Route
@@ -86,7 +91,13 @@ app.post(
   [addAndUpdateStudyProgramValidation, FBAuthMiddleware],
   addStudyProgram
 );
+app.put(
+  '/study_programs/edit_status/:id',
+  [FBAuthMiddleware],
+  changeStudyProgramStatus
+);
 app.delete('/study_programs/:id', [FBAuthMiddleware], deleteStudyProgram);
+
 app.put(
   '/study_programs/:id',
   [addAndUpdateStudyProgramValidation, FBAuthMiddleware],
@@ -98,6 +109,7 @@ app.get('/timelines', getTimelines);
 app.get('/timelines/:id', getTimeline);
 app.post('/timelines', [FBAuthMiddleware, addTimelineValidation], addTimeline);
 app.put('/timelines/:id', [FBAuthMiddleware], updateTimeline);
+app.put('/timelines/edit_status/:id', [FBAuthMiddleware], changeTimelineStatus);
 app.delete('/timelines/:id', [FBAuthMiddleware], deleteTimeline);
 
 // 🛣 Submission Route

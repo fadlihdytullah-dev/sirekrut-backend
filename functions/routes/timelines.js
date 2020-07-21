@@ -189,6 +189,35 @@ const deleteTimeline = async (req, res) => {
   }
 };
 
+const changeTimelineStatus = async (req, res) => {
+  let {id} = req.params;
+
+  const doc = await TIMELINE_REF.doc(id).get();
+
+  if (!doc.exists) {
+    responseData = buildResponseData(
+      false,
+      'Timeline with the given ID was not found.',
+      null
+    );
+
+    return res.status(404).json(responseData);
+  }
+
+  const data = doc.data();
+  const status = data.status === 'ACTIVE' ? 'NONACTIVE' : 'ACTIVE';
+  const updatedData = {
+    ...data,
+    status,
+  };
+
+  const docRef = await TIMELINE_REF.doc(id).update(updatedData);
+
+  responseData = buildResponseData(true, null, updatedData || {});
+
+  res.json(responseData);
+};
+
 module.exports = {
   getTimelines,
   getTimeline,
@@ -196,4 +225,5 @@ module.exports = {
   addTimeline,
   updateTimeline,
   deleteTimeline,
+  changeTimelineStatus,
 };

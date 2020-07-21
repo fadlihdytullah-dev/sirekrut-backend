@@ -274,7 +274,7 @@ const changeUserStatus = async (req, res) => {
 
   const docRef = await USERS_REF.doc(id).update(updatedData);
 
-  responseData = buildResponseData(true, null, doc.data() || {});
+  responseData = buildResponseData(true, null, updatedData || {});
 
   res.json(responseData);
 };
