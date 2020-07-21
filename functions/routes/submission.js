@@ -86,8 +86,15 @@ const addSubmission = async (req, res) => {
     newItem = {
       ...newItem,
       status: 0,
-      score: {academicScore: 0, psikotesScore: 0, interviewScore: 0},
+      score: {
+        academicScore: 0,
+        psikotesScore: 0,
+        microteachingScore: 0,
+        interviewScore: 0,
+        orientationScore: 0,
+      },
       passed: 0,
+      determination: 0,
       createdAt: new Date().toISOString(),
     };
 
@@ -129,9 +136,13 @@ const updateScore = async (req, res) => {
 
     const updatedScore = {
       score: {
-        psikotesScore: score.psikotesScore || prevData.score.psikotesScore,
-        interviewScore: score.interviewScore || prevData.score.interviewScore,
         academicScore: score.academicScore || prevData.score.academicScore,
+        psikotesScore: score.psikotesScore || prevData.score.psikotesScore,
+        microteachingScore:
+          score.microteachingScore || prevData.score.microteachingScore,
+        interviewScore: score.interviewScore || prevData.score.interviewScore,
+        orientationScore:
+          score.orientationScore || prevData.score.orientationScore,
       },
     };
     const docRef = await SUBMISSION_REF.doc(id).update(updatedScore);
@@ -185,13 +196,33 @@ const updateStatus = async (req, res) => {
 const updateStatusAgreement = async (req, res) => {
   const {id, updatedStatus, positionId, periodId} = req.body;
   try {
+    const docRef = await SUBMISSION_REF.doc(id).update({
+      passed: updatedStatus,
+      determination: 0,
+    });
+    responseData = buildResponseData(true, null, {id, updatedStatus});
+
+    res.json(responseData);
+  } catch (error) {
+    responseData = buildResponseData(
+      false,
+      buildErrorMessage(actionType.UPDATING, CONTEXT) + error.message,
+      null
+    );
+    res.status(500).json(responseData);
+  }
+};
+
+const updateStatusDetermination = async (req, res) => {
+  const {id, updatedStatus, positionId, periodId} = req.body;
+  try {
     const getAllAplicantsFromPositions = await SUBMISSION_REF.where(
       'positionId',
       '==',
       positionId
     )
       .where('periodId', '==', periodId)
-      .where('passed', '==', 2)
+      .where('determination', '==', 2)
       .get();
     const totalAcceptApplicant = getAllAplicantsFromPositions.docs.length;
     const getQuotaFromPeriode = await TIMELINE_REF.doc(periodId).get();
@@ -207,7 +238,7 @@ const updateStatusAgreement = async (req, res) => {
       );
     } else {
       const docRef = await SUBMISSION_REF.doc(id).update({
-        passed: updatedStatus,
+        determination: updatedStatus,
       });
       responseData = buildResponseData(true, null, {id, updatedStatus});
     }
@@ -228,4 +259,5 @@ module.exports = {
   updateScore,
   updateStatus,
   updateStatusAgreement,
+  updateStatusDetermination,
 };

@@ -51,6 +51,7 @@ const {
   updateStatus,
   updateStatusAgreement,
   updateScore,
+  updateStatusDetermination,
 } = require('./routes/submission');
 
 const {
@@ -73,14 +74,14 @@ app.post('/register', addAdminValidation, addAdmin);
 app.post('/login', loginAdminValidation, loginAdmin);
 app.get('/users', getUsers);
 app.delete('/users/:id', deleteUser);
-app.put('/users/:id', [FBAuthMiddleware], changeUserStatus);
+app.put('/users/:id', changeUserStatus);
 
 // 🛣 Positions Route
 app.get('/positions', getPositions);
 app.get('/positions/:id', getPosition);
 app.post('/positions', [addPositionValidation, FBAuthMiddleware], addPosition);
 app.delete('/positions/:id', [FBAuthMiddleware], deletePosition);
-app.put('/positions/edit_status/:id', [FBAuthMiddleware], changePositionStatus);
+app.put('/positions/edit_status/:id', changePositionStatus);
 app.put('/positions/:id', [FBAuthMiddleware], updatePosition);
 
 // 🛣 Study Programs Route
@@ -91,11 +92,7 @@ app.post(
   [addAndUpdateStudyProgramValidation, FBAuthMiddleware],
   addStudyProgram
 );
-app.put(
-  '/study_programs/edit_status/:id',
-  [FBAuthMiddleware],
-  changeStudyProgramStatus
-);
+app.put('/study_programs/edit_status/:id', changeStudyProgramStatus);
 app.delete('/study_programs/:id', [FBAuthMiddleware], deleteStudyProgram);
 
 app.put(
@@ -109,7 +106,7 @@ app.get('/timelines', getTimelines);
 app.get('/timelines/:id', getTimeline);
 app.post('/timelines', [FBAuthMiddleware, addTimelineValidation], addTimeline);
 app.put('/timelines/:id', [FBAuthMiddleware], updateTimeline);
-app.put('/timelines/edit_status/:id', [FBAuthMiddleware], changeTimelineStatus);
+app.put('/timelines/edit_status/:id', changeTimelineStatus);
 app.delete('/timelines/:id', [FBAuthMiddleware], deleteTimeline);
 
 // 🛣 Submission Route
@@ -121,6 +118,11 @@ app.put(
   '/submissions-update/agreement',
   [FBAuthMiddleware],
   updateStatusAgreement
+);
+app.put(
+  '/submissions-update/determination',
+  [FBAuthMiddleware],
+  updateStatusDetermination
 );
 app.put('/submission/:id', [FBAuthMiddleware], updateScore);
 app.delete('/submission/:id', [FBAuthMiddleware], deleteTimeline);
